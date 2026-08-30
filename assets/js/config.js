@@ -14,8 +14,8 @@ const ZYLOGIX_CONFIG = {
   freeShippingThreshold: 500000,
   
   // Supabase Configuration Keys (Can be updated dynamically via UI Admin Settings)
-  supabaseUrl: localStorage.getItem("zylogix_supabase_url") || "",
-  supabaseAnonKey: localStorage.getItem("zylogix_supabase_key") || ""
+  supabaseUrl: localStorage.getItem("zylogix_supabase_url") || "https://nhdfsmxkdlmwpzklrign.supabase.co",
+  supabaseAnonKey: localStorage.getItem("zylogix_supabase_key") || "sb_publishable_Hdpe3IUxzZzbEstUCYbdPQ_QpXJsTob"
 };
 
 /**
