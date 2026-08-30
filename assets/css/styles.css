@@ -141,14 +141,12 @@ input, select, textarea {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--accent-green) 0%, #009640 100%);
+  background: transparent;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
   font-weight: 900;
-  box-shadow: var(--shadow-glow);
 }
 .logo-tagline {
   font-size: 0.7rem;
@@ -156,6 +154,12 @@ input, select, textarea {
   display: block;
   font-weight: 400;
   margin-top: -4px;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .nav-links {

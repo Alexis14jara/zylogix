@@ -26,7 +26,7 @@
     <div class="container header-inner">
       <!-- Logo -->
       <a href="index.html" class="logo">
-        <div class="logo-icon">Z</div>
+        <div class="logo-icon"><img class="logo-img" src="./assets/images/logo.svg" alt="logo-icon"></div>
         <div>
           <span>ZyLogix</span>
           <span class="logo-tagline">Tecnología & productos, simple y confiable</span>
@@ -43,11 +43,6 @@
 
       <!-- Header Actions -->
       <div class="header-actions">
-        <!-- Live Search Input -->
-        <div style="position: relative; flex: 1; max-width: 200px;">
-          <input type="text" id="searchInput" class="form-control" placeholder="Buscar..." style="padding-left: 2.2rem; font-size: 0.85rem; height: 42px;">
-          <span style="position: absolute; left: 10px; top: 10px; opacity: 0.5;">🔍</span>
-        </div>
 
         <!-- Cart Button -->
         <button class="btn-icon" onclick="window.zyStore.toggleCartDrawer(true)" aria-label="Ver Carrito">
@@ -67,7 +62,6 @@
       <a href="#hero" class="nav-link" onclick="document.getElementById('mobileNavMenu').classList.remove('open')">Inicio</a>
       <a href="#catalogo" class="nav-link" onclick="document.getElementById('mobileNavMenu').classList.remove('open')">Catálogo</a>
       <a href="#catalogo" class="nav-link" onclick="document.getElementById('mobileNavMenu').classList.remove('open')">Ofertas 🔥</a>
-      <a href="admin.html" class="nav-link" style="color: var(--accent-green);">Panel Admin ⚙️</a>
     </div>
   </header>
 
@@ -107,49 +101,17 @@
     </div>
   </section>
 
-  <!-- Trust Badges Strip -->
-  <section class="trust-strip">
-    <div class="container trust-grid">
-      <div class="trust-item">
-        <div class="trust-icon">🚚</div>
-        <div>
-          <strong>Envíos Rápidos</strong>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Entrega segura a todo el país</p>
-        </div>
-      </div>
-
-      <div class="trust-item">
-        <div class="trust-icon">🛡️</div>
-        <div>
-          <strong>Garantía ZyLogix</strong>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Productos 100% probados y confiables</p>
-        </div>
-      </div>
-
-      <div class="trust-item">
-        <div class="trust-icon">💬</div>
-        <div>
-          <strong>Pedidos por WhatsApp</strong>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Atención personalizada al +595983092018</p>
-        </div>
-      </div>
-
-      <div class="trust-item">
-        <div class="trust-icon">🎟️</div>
-        <div>
-          <strong>Cupones & Ofertas</strong>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Usá ZYLO10 para 10% de descuento</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Main Catalog Section -->
   <section class="container" id="catalogo" style="padding-top: 4rem;">
     <div class="section-header">
       <div>
         <h2 class="section-title">Nuestros Productos</h2>
         <p class="section-subtitle">Explora los dispositivos y accesorios disponibles con stock actualizado en tiempo real.</p>
+        <!-- Live Search Input -->
+        <div style="position: relative; flex: 1; max-width: 200px; margin-top: 1rem;">
+          <input type="text" id="searchInput" class="form-control" placeholder="Buscar..." style="padding-left: 2.2rem; font-size: 0.85rem; height: 42px;">
+          <span style="position: absolute; left: 10px; top: 10px; opacity: 0.5;">🔍</span>
+        </div>
       </div>
     </div>
 
