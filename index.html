@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZyLogix — Tecnología y Productos | Tienda Oficial</title>
+  <meta name="description" content="ZyLogix — tecnología y productos, simple y confiable. Encuentra lo último en smartwatches, teclados mecánicos, mouses gamer, auriculares y accesorios.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <!-- Supabase JS Client library via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-bar">
+    <div class="container">
+      🚀 <strong>ZyLogix Paraguay:</strong> Envíos a todo el país. Atención directa por WhatsApp al <strong>+595 983 092 018</strong>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <header class="header">
+    <div class="container header-inner">
+      <!-- Logo -->
+      <a href="index.html" class="logo">
+        <div class="logo-icon">Z</div>
+        <div>
+          <span>ZyLogix</span>
+          <span class="logo-tagline">Tecnología & productos, simple y confiable</span>
+        </div>
+      </a>
+
+      <!-- Navigation Links -->
+      <ul class="nav-links">
+        <li><a href="#hero" class="nav-link active">Inicio</a></li>
+        <li><a href="#catalogo" class="nav-link">Catálogo</a></li>
+        <li><a href="#ofertas" class="nav-link">Ofertas 🔥</a></li>
+        <li><a href="admin.html" class="nav-link" style="color: var(--accent-green);">Panel Admin ⚙️</a></li>
+      </ul>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <!-- Live Search Input -->
+        <div style="position: relative; flex: 1; max-width: 200px;">
+          <input type="text" id="searchInput" class="form-control" placeholder="Buscar..." style="padding-left: 2.2rem; font-size: 0.85rem; height: 42px;">
+          <span style="position: absolute; left: 10px; top: 10px; opacity: 0.5;">🔍</span>
+        </div>
+
+        <!-- Cart Button -->
+        <button class="btn-icon" onclick="window.zyStore.toggleCartDrawer(true)" aria-label="Ver Carrito">
+          🛒
+          <span class="badge-count" id="cartBadge">0</span>
+        </button>
+
+        <!-- Mobile Menu Hamburger Button -->
+        <button class="mobile-nav-toggle" id="btnMobileNav" aria-label="Menu Mobile">
+          ☰
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div class="mobile-nav-menu" id="mobileNavMenu">
+      <a href="#hero" class="nav-link" onclick="document.getElementById('mobileNavMenu').classList.remove('open')">Inicio</a>
+      <a href="#catalogo" class="nav-link" onclick="document.getElementById('mobileNavMenu').classList.remove('open')">Catálogo</a>
+      <a href="#catalogo" class="nav-link" onclick="document.getElementById('mobileNavMenu').classList.remove('open')">Ofertas 🔥</a>
+      <a href="admin.html" class="nav-link" style="color: var(--accent-green);">Panel Admin ⚙️</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="hero-tag">⚡ OFERTA DE LANZAMIENTO ZYLOGIX</span>
+        <h1 class="hero-title">
+          Tecnología de Vanguardia,<br>
+          <span class="glow-text">Simple y Confiable.</span>
+        </h1>
+        <p class="hero-description">
+          Descubre nuestra selección curada de smartwatches, periféricos de alto rendimiento, teclados mecánicos y accesorios tecnológicos con garantía directa.
+        </p>
+        <div class="hero-actions">
+          <a href="#catalogo" class="btn-primary">Ver Catálogo Completo 🚀</a>
+          <a href="https://wa.me/595983092018?text=Hola%20ZyLogix,%20quiero%20hacer%20una%20consulta" target="_blank" class="btn-outline">Consultar por WhatsApp 💬</a>
+        </div>
+      </div>
+
+      <div class="hero-image-wrapper">
+        <div class="hero-card-preview">
+          <span class="badge-discount" style="position: absolute; top: 25px; left: 25px; z-index: 5;">-20% DESCUENTO</span>
+          <img src="https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800&auto=format&fit=crop&q=80" alt="Haylou RS4 Plus ZyLogix">
+          <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="font-size: 1.1rem; display: block;">Smartwatch Haylou RS4 Plus</strong>
+              <small style="color: var(--text-muted);">Pantalla Retina AMOLED 1.78" • IP68</small>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-family: var(--font-mono); font-weight: 800; color: var(--accent-green); font-size: 1.2rem;">₲ 380.000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust Badges Strip -->
+  <section class="trust-strip">
+    <div class="container trust-grid">
+      <div class="trust-item">
+        <div class="trust-icon">🚚</div>
+        <div>
+          <strong>Envíos Rápidos</strong>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Entrega segura a todo el país</p>
+        </div>
+      </div>
+
+      <div class="trust-item">
+        <div class="trust-icon">🛡️</div>
+        <div>
+          <strong>Garantía ZyLogix</strong>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Productos 100% probados y confiables</p>
+        </div>
+      </div>
+
+      <div class="trust-item">
+        <div class="trust-icon">💬</div>
+        <div>
+          <strong>Pedidos por WhatsApp</strong>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Atención personalizada al +595983092018</p>
+        </div>
+      </div>
+
+      <div class="trust-item">
+        <div class="trust-icon">🎟️</div>
+        <div>
+          <strong>Cupones & Ofertas</strong>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Usá ZYLO10 para 10% de descuento</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Catalog Section -->
+  <section class="container" id="catalogo" style="padding-top: 4rem;">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Nuestros Productos</h2>
+        <p class="section-subtitle">Explora los dispositivos y accesorios disponibles con stock actualizado en tiempo real.</p>
+      </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="category-pills" id="categoryPills">
+      <!-- Dynamic rendering by store.js -->
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="productGrid">
+      <!-- Dynamic rendering by store.js -->
+    </div>
+  </section>
+
+  <!-- Cart Drawer (Sidebar Overlay) -->
+  <div class="cart-drawer-overlay" id="cartDrawerOverlay">
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <h3 style="display: flex; align-items: center; gap: 0.5rem;">🛒 Mi Carrito</h3>
+        <button class="modal-close" style="position: static;" onclick="window.zyStore.toggleCartDrawer(false)">✕</button>
+      </div>
+
+      <div class="cart-body" id="cartDrawerBody">
+        <!-- Rendered by store.js -->
+      </div>
+
+      <div class="cart-footer">
+        <!-- Coupon Input -->
+        <div class="coupon-box">
+          <input type="text" id="couponInput" class="coupon-input" placeholder="Código de Cupón (ej: ZYLO10)">
+          <button class="btn-outline" id="btnApplyCoupon" style="padding: 0.6rem 1rem;">Aplicar</button>
+        </div>
+
+        <!-- Summary -->
+        <div class="cart-summary-line">
+          <span>Subtotal:</span>
+          <strong id="cartSubtotal">₲ 0</strong>
+        </div>
+        <div class="cart-summary-line" style="color: var(--accent-green);">
+          <span>Descuento Cupón:</span>
+          <strong id="cartDiscount">-₲ 0</strong>
+        </div>
+        <div class="cart-summary-line">
+          <span>Costo de Envío:</span>
+          <strong id="cartShipping">₲ 20.000</strong>
+        </div>
+        <div class="cart-summary-line total">
+          <span>Total:</span>
+          <strong id="cartTotal" style="color: var(--accent-green);">₲ 0</strong>
+        </div>
+
+        <button class="btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem; padding: 1rem;" onclick="window.zyStore.openCheckoutModal()">
+          🚀 Finalizar Pedido por WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Details Modal (Dynamic Ficha Técnica) -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-container">
+      <!-- Content populated dynamically by store.js openProductModal() -->
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-container" style="max-width: 550px; padding: 2rem;">
+      <button class="modal-close" onclick="window.zyStore.closeModal('checkoutModal')">✕</button>
+      <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--accent-green);">🧾 Datos de Entrega</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Tu pedido será procesado y enviado directamente a nuestro WhatsApp oficial (<strong>+595983092018</strong>).</p>
+
+      <form onsubmit="event.preventDefault(); window.zyStore.submitOrder({
+        customerName: this.customerName.value,
+        customerPhone: this.customerPhone.value,
+        shippingAddress: this.shippingAddress.value,
+        city: this.city.value,
+        notes: this.notes.value,
+        paymentMethod: this.paymentMethod.value
+      })">
+        <div class="form-group">
+          <label class="form-label">Nombre y Apellido *</label>
+          <input type="text" name="customerName" class="form-control" placeholder="Ej: Juan Pérez" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Número de WhatsApp / Teléfono *</label>
+          <input type="tel" name="customerPhone" class="form-control" placeholder="Ej: 0983 123 456" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dirección de Envío *</label>
+          <input type="text" name="shippingAddress" class="form-control" placeholder="Calle, Nro de casa o punto de referencia" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ciudad / Localidad</label>
+          <input type="text" name="city" class="form-control" placeholder="Ej: Asunción / Fernando de la Mora / Ciudad del Este" value="Asunción">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Método de Pago Preferido</label>
+          <select name="paymentMethod" class="form-control">
+            <option value="Efectivo contra entrega">💵 Efectivo a la entrega</option>
+            <option value="Transferencia bancaria">🏦 Transferencia bancaria</option>
+            <option value="Giros / QR Billetera">📱 Billetera / QR (Zimple, Tigo Money)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notas Adicionales (Opcional)</label>
+          <textarea name="notes" class="form-control" rows="2" placeholder="Ej: Entregar por la tarde"></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 1rem; margin-top: 1rem;">
+          📲 Enviar Pedido a WhatsApp
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating WhatsApp Contact Button -->
+  <a href="https://wa.me/595983092018?text=Hola%20ZyLogix,%20necesito%20asistencia%20con%20un%20producto" target="_blank" class="whatsapp-float" aria-label="Contactar por WhatsApp">
+    💬
+  </a>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="logo" style="margin-bottom: 1rem;">
+          <div class="logo-icon">Z</div>
+          <span>ZyLogix</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 320px; margin-bottom: 1.5rem;">
+          ZyLogix — tecnología y productos, simple y confiable.<br>
+          Encuentra los mejores productos tecnológicos con la máxima confianza y rapidez.
+        </p>
+      </div>
+
+      <div>
+        <h4 style="color: var(--accent-green); margin-bottom: 1rem;">Categorías</h4>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; color: var(--text-muted); font-size: 0.9rem;">
+          <li>Smartwatches & Wearables</li>
+          <li>Periféricos & Audio</li>
+          <li>Accesorios & Carga</li>
+          <li>Tecnología Portátil</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="color: var(--accent-green); margin-bottom: 1rem;">Contacto Directo</h4>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.8;">
+          📲 WhatsApp: +595 983 092 018<br>
+          📍 Asunción, Paraguay<br>
+          ✉️ contacto@zylogix.com.py
+        </p>
+      </div>
+
+      <div>
+        <h4 style="color: var(--accent-green); margin-bottom: 1rem;">Administración</h4>
+        <a href="admin.html" class="btn-outline" style="font-size: 0.85rem;">🔑 Acceso Panel Admin</a>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      &copy; 2026 ZyLogix — Todos los derechos reservados. Tecnología y productos, simple y confiable.
+    </div>
+  </footer>
+
+  <!-- Application Scripts -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/supabase-db.js"></script>
+  <script src="assets/js/store.js"></script>
+
+</body>
+</html>
