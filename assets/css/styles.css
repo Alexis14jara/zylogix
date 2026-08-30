@@ -267,7 +267,7 @@ input, select, textarea {
 /* --- Hero Banner Section --- */
 .hero {
   position: relative;
-  padding: 4rem 0 3rem;
+  padding: 8rem  3rem;
   background: radial-gradient(circle at 80% 20%, rgba(0, 230, 118, 0.08) 0%, transparent 60%);
   overflow: hidden;
 }
