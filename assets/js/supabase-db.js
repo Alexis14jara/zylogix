@@ -111,7 +111,7 @@ class ZyLogixDBService {
           .select("*, categories(name), brands(name), product_features(*), product_images(*)")
           .order("created_at", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           // Normalize Supabase format to ZyLogix schema
           return data.map(p => ({
             id: p.id,
@@ -246,7 +246,7 @@ class ZyLogixDBService {
     if (this.useSupabase) {
       try {
         const { data, error } = await this.supabase.from("categories").select("*").order("name");
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data.map(c => ({
             id: c.id,
             name: c.name,
@@ -308,11 +308,21 @@ class ZyLogixDBService {
   async deleteCategory(categoryId) {
     const local = this.getLocalData();
     local.categories = (local.categories || []).filter(c => c.id !== categoryId);
+    if (local.products) {
+      local.products.forEach(p => {
+        if (p.categoryId === categoryId) {
+          p.categoryId = null;
+          p.categoryName = 'General';
+        }
+      });
+    }
     this.saveLocalData(local);
 
     if (this.useSupabase) {
       try {
-        await this.supabase.from("categories").delete().eq("id", categoryId);
+        await this.supabase.from("products").update({ category_id: null }).eq("category_id", categoryId);
+        const { error } = await this.supabase.from("categories").delete().eq("id", categoryId);
+        if (error) console.error("Supabase deleteCategory error:", error.message);
       } catch (err) {
         console.error("Supabase deleteCategory error:", err);
       }
@@ -392,7 +402,7 @@ class ZyLogixDBService {
           .select("*, products(name)")
           .order("created_at", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           return data.map(m => ({
             id: m.id,
             productId: m.product_id,
