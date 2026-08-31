@@ -119,6 +119,7 @@ class ZyLogixDBService {
 
         if (!error && data) {
           // Normalize Supabase format to ZyLogix schema
+          return data.map(p => {
             const productImages = p.product_images && p.product_images.length > 0 
               ? p.product_images.map(img => img.url) 
               : [];
@@ -147,6 +148,7 @@ class ZyLogixDBService {
               features: p.product_features ? p.product_features.map(f => ({ name: f.feature_name, value: f.feature_value })) : [],
               createdAt: p.created_at
             };
+          });
         }
       } catch (err) {
         console.warn("Supabase fetch failed, falling back to LocalStorage:", err);
@@ -160,10 +162,11 @@ class ZyLogixDBService {
   async saveProduct(productData, customNotes = null) {
     const local = this.getLocalData();
     let updatedProducts = [...local.products];
+    let productId = productData.id || generateUUID();
 
     if (productData.id) {
       // Edit existing product
-      const idx = updatedProducts.findIndex(p => p.id === productData.id);
+      const idx = updatedProducts.findIndex(p => p.id === productId);
       if (idx !== -1) {
         const oldStock = updatedProducts[idx].stock;
         const stockDiff = productData.stock - oldStock;
@@ -175,7 +178,7 @@ class ZyLogixDBService {
         // Record stock movement if stock quantity changed
         if (stockDiff !== 0) {
           await this.addInventoryMovement({
-            productId: productData.id,
+            productId: productId,
             productName: productData.name,
             changeQuantity: stockDiff,
             type: stockDiff > 0 ? 'supplier_restock' : 'manual_adjustment',
@@ -186,7 +189,7 @@ class ZyLogixDBService {
     } else {
       const newProduct = {
         ...productData,
-        id: productData.id || generateUUID(),
+        id: productId,
         createdAt: new Date().toISOString()
       };
       updatedProducts.unshift(newProduct);
@@ -196,7 +199,7 @@ class ZyLogixDBService {
       // Log initial stock movement
       if (newProduct.stock > 0) {
         await this.addInventoryMovement({
-          productId: newProduct.id,
+          productId: productId,
           productName: newProduct.name,
           changeQuantity: newProduct.stock,
           type: 'supplier_restock',
@@ -208,7 +211,7 @@ class ZyLogixDBService {
     if (this.useSupabase) {
       try {
         const payload = {
-          id: productData.id || undefined,
+          id: productId,
           name: productData.name,
           slug: productData.slug || productData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'),
           short_description: productData.shortDescription,
@@ -226,23 +229,23 @@ class ZyLogixDBService {
           discount_percentage: productData.discountPercentage || 0
         };
 
-        const { data: upsertData, error } = await this.supabase
+        const { error } = await this.supabase
           .from("products")
-          .upsert(payload)
-          .select();
+          .upsert(payload);
 
-        if (error) console.error("Supabase upsert product error:", error.message);
+        if (error) {
+          console.error("Supabase upsert product error:", error.message);
+          return { success: false, error: error.message };
+        }
 
-        const savedId = (upsertData && upsertData[0] && upsertData[0].id) ? upsertData[0].id : productData.id;
-
-        if (savedId && productData.images && Array.isArray(productData.images)) {
+        if (productData.images && Array.isArray(productData.images)) {
           // Sync images to product_images table in Supabase
-          await this.supabase.from("product_images").delete().eq("product_id", savedId);
+          await this.supabase.from("product_images").delete().eq("product_id", productId);
 
           const imageRows = productData.images
             .filter(url => typeof url === 'string' && url.trim() !== '')
             .map((url, idx) => ({
-              product_id: savedId,
+              product_id: productId,
               url: url.trim(),
               is_primary: idx === 0
             }));
@@ -254,10 +257,11 @@ class ZyLogixDBService {
         }
       } catch (err) {
         console.error("Supabase upsert exception:", err);
+        return { success: false, error: err.message };
       }
     }
 
-    return true;
+    return { success: true };
   }
 
   async deleteProduct(productId) {
