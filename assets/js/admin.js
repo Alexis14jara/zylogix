@@ -257,9 +257,13 @@ class ZyLogixAdmin {
   populateCategoryDropdown() {
     const select = document.getElementById("prodCategoryInput");
     if (!select) return;
-    select.innerHTML = this.categories.map(c => `
-      <option value="${c.id}">${c.icon || '🏷️'} ${c.name}</option>
-    `).join("");
+    let html = `<option value="">🏷️ General (Sin categoría)</option>`;
+    if (this.categories && this.categories.length > 0) {
+      html += this.categories.map(c => `
+        <option value="${c.id}">${c.icon || '🏷️'} ${c.name}</option>
+      `).join("");
+    }
+    select.innerHTML = html;
   }
 
   renderProductsTable() {
@@ -304,7 +308,7 @@ class ZyLogixAdmin {
     row.style.alignItems = "center";
 
     row.innerHTML = `
-      <input type="text" class="btn-admin-secondary prod-image-url-input" style="flex: 1; text-align: left; font-size: 0.85rem;" placeholder="Ej: https://i.imgur.com/... o enlace Drive" value="${url}" onchange="window.zyAdmin.handleDriveUrlConvert(this)" oninput="window.zyAdmin.handleDriveUrlConvert(this)">
+      <input type="text" class="btn-admin-secondary prod-image-url-input" style="flex: 1; text-align: left; font-size: 0.85rem;" placeholder="Ej: https://i.imgur.com/... o enlace Drive" value="${url}" onchange="window.zyAdmin.handleDriveUrlConvert(this)">
       <button type="button" class="btn-admin-secondary" style="border-color: #ef4444; color: #ef4444; padding: 0.4rem 0.6rem;" onclick="document.getElementById('${rowId}').remove()">🗑️</button>
     `;
 
@@ -395,42 +399,52 @@ class ZyLogixAdmin {
 
   async saveProductForm(e) {
     e.preventDefault();
-    const id = document.getElementById("productIdInput").value;
-    const imagesList = this.getProductImagesList();
-    const selectedCatId = document.getElementById("prodCategoryInput").value;
-    const catObj = this.categories.find(c => c.id === selectedCatId);
+    try {
+      const id = document.getElementById("productIdInput").value;
+      const imagesList = this.getProductImagesList();
+      const rawCatId = document.getElementById("prodCategoryInput").value;
 
-    const productPayload = {
-      id: id || null,
-      name: document.getElementById("prodNameInput").value,
-      sku: document.getElementById("prodSkuInput").value,
-      price: Number(document.getElementById("prodPriceInput").value),
-      oldPrice: document.getElementById("prodOldPriceInput").value ? Number(document.getElementById("prodOldPriceInput").value) : null,
-      cost: document.getElementById("prodCostInput").value ? Number(document.getElementById("prodCostInput").value) : 0,
-      stock: Number(document.getElementById("prodStockInput").value),
-      minStock: Number(document.getElementById("prodMinStockInput").value) || 5,
-      categoryId: selectedCatId,
-      categoryName: catObj ? catObj.name : 'General',
-      shortDescription: document.getElementById("prodShortDescInput").value,
-      fullDescription: document.getElementById("prodFullDescInput").value,
-      images: imagesList,
-      isFeatured: document.getElementById("prodFeaturedInput").checked,
-      isOffer: document.getElementById("prodOfferInput").checked,
-      status: 'active'
-    };
+      const isUUID = (str) => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+      const categoryId = isUUID(rawCatId) ? rawCatId : null;
+      const catObj = (this.categories || []).find(c => c.id === rawCatId);
 
-    const res = await window.ZyLogixDB.saveProduct(productPayload);
-    if (res && res.error) {
-      alert("⚠️ Error de Supabase al guardar producto:\n" + res.error);
+      const productPayload = {
+        id: id || null,
+        name: document.getElementById("prodNameInput").value.trim(),
+        sku: document.getElementById("prodSkuInput").value.trim(),
+        price: Number(document.getElementById("prodPriceInput").value),
+        oldPrice: document.getElementById("prodOldPriceInput").value ? Number(document.getElementById("prodOldPriceInput").value) : null,
+        cost: document.getElementById("prodCostInput").value ? Number(document.getElementById("prodCostInput").value) : 0,
+        stock: Number(document.getElementById("prodStockInput").value),
+        minStock: Number(document.getElementById("prodMinStockInput").value) || 5,
+        categoryId: categoryId,
+        categoryName: catObj ? catObj.name : 'General',
+        shortDescription: document.getElementById("prodShortDescInput").value.trim(),
+        fullDescription: document.getElementById("prodFullDescInput").value.trim(),
+        images: imagesList,
+        isFeatured: document.getElementById("prodFeaturedInput").checked,
+        isOffer: document.getElementById("prodOfferInput").checked,
+        status: 'active'
+      };
+
+      const res = await window.ZyLogixDB.saveProduct(productPayload);
+      if (res && res.error) {
+        alert("⚠️ Error de Supabase al guardar producto:\n" + res.error);
+        return;
+      }
+      await this.loadAllData();
+      this.renderProductsTable();
+      this.renderInventoryTable();
+      this.renderFeaturedTable();
+      this.renderDashboard();
+
+      const modal = document.getElementById("productCrudModal");
+      if (modal) modal.classList.remove("open");
+      alert("✅ Producto guardado con éxito.");
+    } catch (err) {
+      console.error("Error saveProductForm:", err);
+      alert("⚠️ Ocurrió un error al guardar el producto:\n" + err.message);
     }
-    await this.loadAllData();
-    this.renderProductsTable();
-    this.renderInventoryTable();
-    this.renderFeaturedTable();
-    this.renderDashboard();
-
-    const modal = document.getElementById("productCrudModal");
-    if (modal) modal.classList.remove("open");
   }
 
   async deleteProduct(productId) {
