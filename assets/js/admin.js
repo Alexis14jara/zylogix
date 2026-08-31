@@ -4,6 +4,28 @@
  * Stock movement log traceability, Discount builder, Coupon manager, and Supabase config.
  */
 
+function convertDriveUrl(url) {
+  if (!url) return '';
+  url = url.trim();
+
+  let driveId = null;
+  const matchFile = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (matchFile && matchFile[1]) {
+    driveId = matchFile[1];
+  } else {
+    const matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (matchId && matchId[1]) {
+      driveId = matchId[1];
+    }
+  }
+
+  if (driveId) {
+    return `https://lh3.googleusercontent.com/d/${driveId}`;
+  }
+
+  return url;
+}
+
 class ZyLogixAdmin {
   constructor() {
     this.products = [];
@@ -270,12 +292,79 @@ class ZyLogixAdmin {
     }).join("");
   }
 
+  addProductImageInputRow(url = '') {
+    const container = document.getElementById("productImagesListContainer");
+    if (!container) return;
+
+    const rowId = 'imgRow_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    const row = document.createElement("div");
+    row.id = rowId;
+    row.style.display = "flex";
+    row.style.gap = "0.5rem";
+    row.style.alignItems = "center";
+
+    row.innerHTML = `
+      <input type="text" class="btn-admin-secondary prod-image-url-input" style="flex: 1; text-align: left; font-size: 0.85rem;" placeholder="Ej: https://i.imgur.com/... o enlace Drive" value="${url}" onchange="window.zyAdmin.handleDriveUrlConvert(this)" oninput="window.zyAdmin.handleDriveUrlConvert(this)">
+      <button type="button" class="btn-admin-secondary" style="border-color: #ef4444; color: #ef4444; padding: 0.4rem 0.6rem;" onclick="document.getElementById('${rowId}').remove()">🗑️</button>
+    `;
+
+    container.appendChild(row);
+  }
+
+  handleDriveUrlConvert(inputEl) {
+    if (!inputEl) return;
+    const raw = inputEl.value.trim();
+    if (raw.includes("\n") || raw.includes(",")) {
+      const parts = raw.split(/[\n,]+/).map(s => convertDriveUrl(s)).filter(s => s !== "");
+      if (parts.length > 0) {
+        parts.forEach((p, idx) => {
+          if (idx === 0) {
+            inputEl.value = p;
+          } else {
+            this.addProductImageInputRow(p);
+          }
+        });
+        return;
+      }
+    }
+    const converted = convertDriveUrl(raw);
+    if (converted !== raw) {
+      inputEl.value = converted;
+    }
+  }
+
+  setProductImagesList(imagesArray) {
+    const container = document.getElementById("productImagesListContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (imagesArray && imagesArray.length > 0) {
+      imagesArray.forEach(url => this.addProductImageInputRow(url));
+    } else {
+      this.addProductImageInputRow("");
+    }
+  }
+
+  getProductImagesList() {
+    const inputs = document.querySelectorAll(".prod-image-url-input");
+    const urls = [];
+    inputs.forEach(input => {
+      let val = convertDriveUrl(input.value);
+      val = val.replace(/[\r\n\t]/g, "").trim();
+      if (val !== "") {
+        urls.push(val);
+      }
+    });
+    return urls;
+  }
+
   openNewProductModal() {
     this.populateCategoryDropdown();
     const modal = document.getElementById("productCrudModal");
     if (!modal) return;
     document.getElementById("crudProductForm").reset();
     document.getElementById("productIdInput").value = "";
+    this.setProductImagesList([]);
     modal.classList.add("open");
   }
 
@@ -296,7 +385,7 @@ class ZyLogixAdmin {
     document.getElementById("prodCategoryInput").value = product.categoryId;
     document.getElementById("prodShortDescInput").value = product.shortDescription;
     document.getElementById("prodFullDescInput").value = product.fullDescription || "";
-    document.getElementById("prodImageInput").value = product.images ? product.images.join("\n") : "";
+    this.setProductImagesList(product.images);
     document.getElementById("prodFeaturedInput").checked = product.isFeatured;
     document.getElementById("prodOfferInput").checked = product.isOffer;
 
@@ -307,10 +396,7 @@ class ZyLogixAdmin {
   async saveProductForm(e) {
     e.preventDefault();
     const id = document.getElementById("productIdInput").value;
-    const imagesRaw = document.getElementById("prodImageInput").value.trim();
-    const imagesList = imagesRaw 
-      ? imagesRaw.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== "")
-      : [];
+    const imagesList = this.getProductImagesList();
     const selectedCatId = document.getElementById("prodCategoryInput").value;
     const catObj = this.categories.find(c => c.id === selectedCatId);
 
@@ -333,7 +419,10 @@ class ZyLogixAdmin {
       status: 'active'
     };
 
-    await window.ZyLogixDB.saveProduct(productPayload);
+    const res = await window.ZyLogixDB.saveProduct(productPayload);
+    if (res && res.error) {
+      alert("⚠️ Error de Supabase al guardar producto:\n" + res.error);
+    }
     await this.loadAllData();
     this.renderProductsTable();
     this.renderInventoryTable();
