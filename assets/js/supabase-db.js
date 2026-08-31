@@ -314,11 +314,12 @@ class ZyLogixDBService {
     const local = this.getLocalData();
     const targetCat = (local.categories || []).find(c => c.id === categoryId || c.slug === categoryId);
     const catSlug = targetCat ? targetCat.slug : null;
+    const catName = targetCat ? targetCat.name : null;
 
     local.categories = (local.categories || []).filter(c => c.id !== categoryId && c.slug !== categoryId);
     if (local.products) {
       local.products.forEach(p => {
-        if (p.categoryId === categoryId) {
+        if (p.categoryId === categoryId || (catSlug && p.categoryId === catSlug)) {
           p.categoryId = null;
           p.categoryName = 'General';
         }
@@ -329,6 +330,9 @@ class ZyLogixDBService {
     if (this.useSupabase) {
       try {
         await this.supabase.from("products").update({ category_id: null }).eq("category_id", categoryId);
+        if (catSlug) {
+          await this.supabase.from("products").update({ category_id: null }).eq("category_id", catSlug);
+        }
         
         let { error } = await this.supabase.from("categories").delete().eq("id", categoryId);
         
@@ -336,6 +340,12 @@ class ZyLogixDBService {
           console.warn("Delete category by ID failed, attempting by slug:", error.message);
           const slugRes = await this.supabase.from("categories").delete().eq("slug", catSlug);
           error = slugRes.error;
+        }
+
+        if (error && catName) {
+          console.warn("Delete category by slug failed, attempting by name:", error.message);
+          const nameRes = await this.supabase.from("categories").delete().eq("name", catName);
+          error = nameRes.error;
         }
 
         if (error) {
@@ -386,7 +396,9 @@ class ZyLogixDBService {
         "inventory_movements",
         "product_features",
         "product_images",
+        "order_items",
         "orders",
+        "discounts",
         "products",
         "categories",
         "coupons",

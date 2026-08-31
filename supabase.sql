@@ -173,6 +173,18 @@ ALTER TABLE public.discounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if re-running script
+DROP POLICY IF EXISTS "Enable all for products" ON public.products;
+DROP POLICY IF EXISTS "Enable all for categories" ON public.categories;
+DROP POLICY IF EXISTS "Enable all for brands" ON public.brands;
+DROP POLICY IF EXISTS "Enable all for product_images" ON public.product_images;
+DROP POLICY IF EXISTS "Enable all for product_features" ON public.product_features;
+DROP POLICY IF EXISTS "Enable all for inventory_movements" ON public.inventory_movements;
+DROP POLICY IF EXISTS "Enable all for coupons" ON public.coupons;
+DROP POLICY IF EXISTS "Enable all for discounts" ON public.discounts;
+DROP POLICY IF EXISTS "Enable all for orders" ON public.orders;
+DROP POLICY IF EXISTS "Enable all for order_items" ON public.order_items;
+
 -- Public Read & Write RLS Policies
 CREATE POLICY "Enable all for products" ON public.products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Enable all for categories" ON public.categories FOR ALL USING (true) WITH CHECK (true);
