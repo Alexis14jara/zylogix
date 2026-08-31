@@ -719,7 +719,10 @@ class ZyLogixAdmin {
 
   async deleteCategory(categoryId) {
     if (confirm("¿Estás seguro de eliminar esta categoría de ZyLogix?")) {
-      await window.ZyLogixDB.deleteCategory(categoryId);
+      const res = await window.ZyLogixDB.deleteCategory(categoryId);
+      if (res && res.error) {
+        alert("⚠️ Error de Supabase al eliminar la categoría:\n" + res.error);
+      }
       await this.loadAllData();
       this.renderCategoriesTable();
       this.populateCategoryDropdown();
@@ -803,13 +806,17 @@ class ZyLogixAdmin {
   }
 
   async submitProductionReset() {
-    await window.ZyLogixDB.resetDatabaseForProduction();
+    const res = await window.ZyLogixDB.resetDatabaseForProduction();
     await this.loadAllDataAndRender();
 
     const modal = document.getElementById("resetProductionModal");
     if (modal) modal.classList.remove("open");
 
-    alert("🚀 ¡Base de datos reseteada con éxito! Tu tienda ZyLogix está completamente limpia y lista para recibir productos y pedidos reales.");
+    if (res && res.errors && res.errors.length > 0) {
+      alert("⚠️ Reseteo completado con algunas advertencias de Supabase:\n" + res.errors.join("\n"));
+    } else {
+      alert("🚀 ¡Base de datos reseteada con éxito! Tu tienda ZyLogix está completamente limpia y lista para recibir productos y pedidos reales.");
+    }
   }
 
   async submitRestoreDemoData() {

@@ -1,7 +1,13 @@
-/**
- * ZyLogix — Supabase & Local Database Synchronization Service
- * Handles data fetching, fallback to LocalStorage, CRUD operations & inventory logging.
- */
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 class ZyLogixDBService {
   constructor() {
@@ -176,10 +182,9 @@ class ZyLogixDBService {
         }
       }
     } else {
-      // Create new product
       const newProduct = {
         ...productData,
-        id: productData.id || 'a' + Date.now().toString().slice(-11) + '-1111-1111-1111-111111111111',
+        id: productData.id || generateUUID(),
         createdAt: new Date().toISOString()
       };
       updatedProducts.unshift(newProduct);
@@ -269,7 +274,7 @@ class ZyLogixDBService {
 
     const slug = categoryData.slug || categoryData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
     const newCategory = {
-      id: categoryData.id || 'c' + Date.now().toString().slice(-11) + '-1111-1111-1111-111111111111',
+      id: categoryData.id || generateUUID(),
       name: categoryData.name.trim(),
       slug: slug,
       description: categoryData.description || '',
@@ -307,7 +312,10 @@ class ZyLogixDBService {
 
   async deleteCategory(categoryId) {
     const local = this.getLocalData();
-    local.categories = (local.categories || []).filter(c => c.id !== categoryId);
+    const targetCat = (local.categories || []).find(c => c.id === categoryId || c.slug === categoryId);
+    const catSlug = targetCat ? targetCat.slug : null;
+
+    local.categories = (local.categories || []).filter(c => c.id !== categoryId && c.slug !== categoryId);
     if (local.products) {
       local.products.forEach(p => {
         if (p.categoryId === categoryId) {
@@ -321,12 +329,26 @@ class ZyLogixDBService {
     if (this.useSupabase) {
       try {
         await this.supabase.from("products").update({ category_id: null }).eq("category_id", categoryId);
-        const { error } = await this.supabase.from("categories").delete().eq("id", categoryId);
-        if (error) console.error("Supabase deleteCategory error:", error.message);
+        
+        let { error } = await this.supabase.from("categories").delete().eq("id", categoryId);
+        
+        if (error && catSlug) {
+          console.warn("Delete category by ID failed, attempting by slug:", error.message);
+          const slugRes = await this.supabase.from("categories").delete().eq("slug", catSlug);
+          error = slugRes.error;
+        }
+
+        if (error) {
+          console.error("Supabase deleteCategory error:", error.message);
+          return { success: false, error: error.message };
+        }
       } catch (err) {
-        console.error("Supabase deleteCategory error:", err);
+        console.error("Supabase deleteCategory exception:", err);
+        return { success: false, error: err.message };
       }
     }
+
+    return { success: true };
   }
 
   async deleteCoupon(couponId) {
@@ -357,6 +379,8 @@ class ZyLogixDBService {
 
     this.saveLocalData(cleanData);
 
+    const errors = [];
+
     if (this.useSupabase) {
       const tablesToDelete = [
         "inventory_movements",
@@ -371,14 +395,22 @@ class ZyLogixDBService {
 
       for (const table of tablesToDelete) {
         try {
-          await this.supabase.from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          let { error } = await this.supabase.from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          if (error) {
+            const res2 = await this.supabase.from(table).delete().gt("created_at", "1970-01-01T00:00:00Z");
+            if (res2.error) {
+              console.warn(`Supabase clear table ${table} failed:`, res2.error.message);
+              errors.push(`${table}: ${res2.error.message}`);
+            }
+          }
         } catch (err) {
           console.warn(`Supabase clear table ${table} failed:`, err);
+          errors.push(`${table}: ${err.message}`);
         }
       }
     }
 
-    return true;
+    return { success: errors.length === 0, errors };
   }
 
   async restoreDemoData() {
