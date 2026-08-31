@@ -334,23 +334,47 @@ class ZyLogixDBService {
   }
 
   async resetDatabaseForProduction() {
-    const local = this.getLocalData();
-    // Clear test orders, inventory movements, reset stock to initial baseline
-    local.orders = [];
-    local.inventoryMovements = [];
-    local.customers = [];
+    const cleanData = {
+      products: [],
+      categories: [],
+      brands: [],
+      orders: [],
+      coupons: [],
+      discounts: [],
+      inventoryMovements: [],
+      customers: []
+    };
 
-    this.saveLocalData(local);
+    this.saveLocalData(cleanData);
 
     if (this.useSupabase) {
-      try {
-        await this.supabase.from("orders").delete().gte("order_number", 0);
-        await this.supabase.from("inventory_movements").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      } catch (err) {
-        console.error("Supabase production reset error:", err);
+      const tablesToDelete = [
+        "inventory_movements",
+        "product_features",
+        "product_images",
+        "orders",
+        "products",
+        "categories",
+        "coupons",
+        "brands"
+      ];
+
+      for (const table of tablesToDelete) {
+        try {
+          await this.supabase.from(table).delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        } catch (err) {
+          console.warn(`Supabase clear table ${table} failed:`, err);
+        }
       }
     }
 
+    return true;
+  }
+
+  async restoreDemoData() {
+    if (window.INITIAL_MOCK_DATA) {
+      this.saveLocalData(window.INITIAL_MOCK_DATA);
+    }
     return true;
   }
 

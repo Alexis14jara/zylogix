@@ -409,13 +409,16 @@
             <button type="submit" class="btn-admin" style="width: 100%; justify-content: center;">💾 Guardar Conexión Supabase</button>
           </form>
         <div class="chart-container" style="max-width: 600px; margin-top: 2rem; border: 1px solid rgba(239, 68, 68, 0.4);">
-          <h3 style="color: #ef4444; margin-bottom: 0.5rem;">🚀 Lanzamiento a Producción / Reseteo de Base de Datos</h3>
+          <h3 style="color: #ef4444; margin-bottom: 0.5rem;">🚀 Lanzamiento a Producción / Reseteo Completo de Base de Datos</h3>
           <p style="font-size: 0.85rem; color: var(--admin-subtext); margin-bottom: 1.5rem;">
-            Limpia los pedidos de prueba, resetea la trazabilidad de inventario y deja el sistema limpio listo para recibir pedidos reales de clientes.
+            Limpia por completo productos, categorías, cupones, pedidos, trazabilidad de inventario y clientes de prueba, dejando la base de datos totalmente limpia lista para producción.
           </p>
 
           <button type="button" class="btn-admin-secondary" style="border-color: #ef4444; color: #ef4444; width: 100%; justify-content: center; font-weight: 700;" onclick="window.zyAdmin.openResetProductionModal()">
-            🔥 Resetear Datos de Prueba para Producción
+            🔥 Resetear Base de Datos Completa
+          </button>
+          <button type="button" class="btn-admin-secondary" style="margin-top: 0.75rem; width: 100%; justify-content: center;" onclick="window.zyAdmin.submitRestoreDemoData()">
+            🔄 Restablecer Datos de Demostración
           </button>
         </div>
       </section>
@@ -631,12 +634,12 @@
       <button onclick="document.getElementById('resetProductionModal').classList.remove('open')" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: #fff; font-size: 1.2rem; cursor: pointer;">✕</button>
       <h3 style="font-size: 1.4rem; color: #ef4444; margin-bottom: 0.5rem;">🚀 Resetear Base de Datos para Producción</h3>
       <p style="color: var(--admin-subtext); font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.6;">
-        Esta acción borrará todos los <strong>pedidos de prueba</strong>, limpiará la trazabilidad de inventario y preparará tu tienda ZyLogix para el lanzamiento oficial.
+        Esta acción eliminará todos los <strong>productos de prueba</strong>, <strong>categorías</strong>, <strong>cupones</strong>, <strong>pedidos</strong>, <strong>clientes</strong> e <strong>historial de inventario</strong>, dejando el sistema 100% limpio y listo para el lanzamiento oficial.
       </p>
 
       <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
         <button type="button" class="btn-admin-secondary" style="flex: 1; justify-content: center;" onclick="document.getElementById('resetProductionModal').classList.remove('open')">Cancelar</button>
-        <button type="button" class="btn-admin" style="flex: 1; justify-content: center; background: #ef4444; color: #fff;" onclick="window.zyAdmin.submitProductionReset()">🔥 Sí, Resetear para Lanzamiento</button>
+        <button type="button" class="btn-admin" style="flex: 1; justify-content: center; background: #ef4444; color: #fff;" onclick="window.zyAdmin.submitProductionReset()">🔥 Sí, Resetear Todo</button>
       </div>
     </div>
   </div>

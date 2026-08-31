@@ -115,10 +115,10 @@ class ZyLogixAdmin {
   // --- 1. DASHBOARD & RESUMEN ---
   renderDashboard() {
     // Total Sales ₲
-    const totalSales = this.orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? o.total : 0), 0);
-    const totalOrders = this.orders.length;
-    const totalCustomers = this.customers.length || 126;
-    const activeCoupons = this.coupons.filter(c => c.isActive).length;
+    const totalSales = (this.orders || []).reduce((sum, o) => sum + (o.status !== 'cancelled' ? Number(o.total || 0) : 0), 0);
+    const totalOrders = (this.orders || []).length;
+    const totalCustomers = (this.customers || []).length;
+    const activeCoupons = (this.coupons || []).filter(c => c.isActive).length;
 
     const salesEl = document.getElementById("metricSales");
     const ordersEl = document.getElementById("metricOrders");
@@ -158,15 +158,48 @@ class ZyLogixAdmin {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     
-    // Simple sleek HTML5 Canvas gradient chart for 30 days sales
     const width = canvas.width = canvas.parentElement.clientWidth || 600;
     const height = canvas.height = 200;
 
     ctx.clearRect(0, 0, width, height);
 
-    const points = [12, 18, 15, 25, 32, 28, 40, 35, 48, 42, 60, 55, 70, 65, 85, 90, 80, 95, 110, 105, 125, 120, 140];
+    // Dynamic sales calculation for last 7 days from actual orders
+    const days = 7;
+    const salesByDay = new Array(days).fill(0);
+    const today = new Date();
+
+    const validOrders = (this.orders || []).filter(o => o.status !== 'cancelled');
+
+    validOrders.forEach(o => {
+      if (!o.createdAt) return;
+      const orderDate = new Date(o.createdAt);
+      const diffTime = today - orderDate;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays < days) {
+        salesByDay[days - 1 - diffDays] += Number(o.total || 0);
+      }
+    });
+
+    const points = salesByDay;
+    const maxVal = Math.max(...points);
+
+    if (maxVal === 0) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, height - 20);
+      ctx.lineTo(width, height - 20);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.font = "12px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Sin ventas registradas aún", width / 2, height / 2);
+      return;
+    }
+
     const stepX = width / (points.length - 1);
-    const maxY = Math.max(...points) * 1.2;
+    const maxY = maxVal * 1.25;
 
     // Draw area gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, height);
@@ -177,7 +210,7 @@ class ZyLogixAdmin {
     ctx.moveTo(0, height);
     points.forEach((val, i) => {
       const x = i * stepX;
-      const y = height - (val / maxY) * height;
+      const y = height - (val / maxY) * (height - 30) - 10;
       ctx.lineTo(x, y);
     });
     ctx.lineTo(width, height);
@@ -189,7 +222,7 @@ class ZyLogixAdmin {
     ctx.beginPath();
     points.forEach((val, i) => {
       const x = i * stepX;
-      const y = height - (val / maxY) * height;
+      const y = height - (val / maxY) * (height - 30) - 10;
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -210,6 +243,11 @@ class ZyLogixAdmin {
   renderProductsTable() {
     const tbody = document.getElementById("productsTableBody");
     if (!tbody) return;
+
+    if (!this.products || this.products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay productos registrados en la base de datos.</td></tr>`;
+      return;
+    }
 
     tbody.innerHTML = this.products.map(p => {
       const stockInfo = getStockStatus(p.stock, p.minStock, p.status);
@@ -352,6 +390,11 @@ class ZyLogixAdmin {
     const tbody = document.getElementById("ordersTableBody");
     if (!tbody) return;
 
+    if (!this.orders || this.orders.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay pedidos registrados en el sistema.</td></tr>`;
+      return;
+    }
+
     tbody.innerHTML = this.orders.map(o => `
       <tr>
         <td><strong>#${o.orderNumber || o.id}</strong></td>
@@ -398,21 +441,25 @@ class ZyLogixAdmin {
     const productFilterSelect = document.getElementById("filterMovementProduct");
 
     if (stockTbody) {
-      stockTbody.innerHTML = this.products.map(p => {
-        const stockInfo = getStockStatus(p.stock, p.minStock, p.status);
-        return `
-          <tr>
-            <td><strong>${p.name}</strong> (${p.sku})</td>
-            <td><strong>${p.stock} unidades</strong></td>
-            <td>Mín: ${p.minStock}</td>
-            <td><span class="stock-pill ${stockInfo.class}">${stockInfo.icon} ${stockInfo.label}</span></td>
-            <td>
-              <button class="btn-admin-secondary" onclick="window.zyAdmin.openRestockModal('${p.id}')">➕ Agregar Stock</button>
-              <button class="btn-admin-secondary" style="border-color: #ef4444; color: #ef4444;" onclick="window.zyAdmin.openStockOutputModal('${p.id}')">➖ Dar Salida</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+      if (!this.products || this.products.length === 0) {
+        stockTbody.innerHTML = `<tr><td colspan="5" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay productos registrados en inventario.</td></tr>`;
+      } else {
+        stockTbody.innerHTML = this.products.map(p => {
+          const stockInfo = getStockStatus(p.stock, p.minStock, p.status);
+          return `
+            <tr>
+              <td><strong>${p.name}</strong> (${p.sku})</td>
+              <td><strong>${p.stock} unidades</strong></td>
+              <td>Mín: ${p.minStock}</td>
+              <td><span class="stock-pill ${stockInfo.class}">${stockInfo.icon} ${stockInfo.label}</span></td>
+              <td>
+                <button class="btn-admin-secondary" onclick="window.zyAdmin.openRestockModal('${p.id}')">➕ Agregar Stock</button>
+                <button class="btn-admin-secondary" style="border-color: #ef4444; color: #ef4444;" onclick="window.zyAdmin.openStockOutputModal('${p.id}')">➖ Dar Salida</button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
     }
 
     if (productFilterSelect) {
@@ -551,6 +598,11 @@ class ZyLogixAdmin {
     const tbody = document.getElementById("couponsTableBody");
     if (!tbody) return;
 
+    if (!this.coupons || this.coupons.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay cupones de descuento creados.</td></tr>`;
+      return;
+    }
+
     tbody.innerHTML = this.coupons.map(c => `
       <tr>
         <td><strong style="font-family: var(--font-mono); color: var(--admin-green);">${c.code}</strong></td>
@@ -598,6 +650,11 @@ class ZyLogixAdmin {
     const tbody = document.getElementById("discountsTableBody");
     if (!tbody) return;
 
+    if (!this.discounts || this.discounts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay promociones activas.</td></tr>`;
+      return;
+    }
+
     tbody.innerHTML = this.discounts.map(d => `
       <tr>
         <td><strong>${d.name}</strong></td>
@@ -613,6 +670,11 @@ class ZyLogixAdmin {
   renderFeaturedTable() {
     const tbody = document.getElementById("featuredTableBody");
     if (!tbody) return;
+
+    if (!this.products || this.products.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay productos para destacar.</td></tr>`;
+      return;
+    }
 
     tbody.innerHTML = this.products.map(p => `
       <tr>
@@ -636,6 +698,11 @@ class ZyLogixAdmin {
   renderCategoriesTable() {
     const tbody = document.getElementById("categoriesTableBody");
     if (!tbody) return;
+
+    if (!this.categories || this.categories.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay categorías registradas.</td></tr>`;
+      return;
+    }
 
     tbody.innerHTML = this.categories.map(c => `
       <tr>
@@ -663,13 +730,18 @@ class ZyLogixAdmin {
     const tbody = document.getElementById("customersTableBody");
     if (!tbody) return;
 
+    if (!this.customers || this.customers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color: var(--admin-subtext); text-align: center; padding: 2rem;">No hay clientes registrados en el sistema.</td></tr>`;
+      return;
+    }
+
     tbody.innerHTML = this.customers.map(c => `
       <tr>
         <td><strong>${c.name}</strong></td>
         <td>${c.email}</td>
         <td>${c.phone}</td>
-        <td>${c.city}</td>
-        <td><strong>${c.ordersCount} pedidos</strong></td>
+        <td>${c.city || 'Asunción'}</td>
+        <td><strong>${c.ordersCount || c.totalOrders || 1} pedidos</strong></td>
         <td><strong style="color: var(--admin-green);">${formatCurrency(c.totalSpent)}</strong></td>
       </tr>
     `).join("");
@@ -732,15 +804,20 @@ class ZyLogixAdmin {
 
   async submitProductionReset() {
     await window.ZyLogixDB.resetDatabaseForProduction();
-    await this.loadAllData();
-    this.renderOrdersTable();
-    this.renderInventoryTable();
-    this.renderDashboard();
+    await this.loadAllDataAndRender();
 
     const modal = document.getElementById("resetProductionModal");
     if (modal) modal.classList.remove("open");
 
-    alert("🚀 ¡Base de datos reseteada con éxito! Tu tienda ZyLogix está limpia y lista para recibir pedidos reales.");
+    alert("🚀 ¡Base de datos reseteada con éxito! Tu tienda ZyLogix está completamente limpia y lista para recibir productos y pedidos reales.");
+  }
+
+  async submitRestoreDemoData() {
+    if (confirm("¿Deseas restaurar los datos de prueba iniciales (productos, categorías y pedidos demo)?")) {
+      await window.ZyLogixDB.restoreDemoData();
+      await this.loadAllDataAndRender();
+      alert("🔄 ¡Datos de demostración restaurados con éxito!");
+    }
   }
 }
 
