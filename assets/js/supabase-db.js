@@ -119,32 +119,34 @@ class ZyLogixDBService {
 
         if (!error && data) {
           // Normalize Supabase format to ZyLogix schema
-          return data.map(p => ({
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            shortDescription: p.short_description,
-            fullDescription: p.full_description,
-            price: Number(p.price),
-            oldPrice: p.old_price ? Number(p.old_price) : null,
-            cost: p.cost ? Number(p.cost) : 0,
-            stock: p.stock,
-            minStock: p.min_stock || 5,
-            sku: p.sku,
-            categoryId: p.category_id,
-            categoryName: p.categories ? p.categories.name : 'General',
-            brandId: p.brand_id,
-            brandName: p.brands ? p.brands.name : 'ZyLogix',
-            status: p.status,
-            isFeatured: p.is_featured,
-            isOffer: p.is_offer,
-            discountPercentage: p.discount_percentage || 0,
-            images: p.product_images && p.product_images.length > 0 
+            const productImages = p.product_images && p.product_images.length > 0 
               ? p.product_images.map(img => img.url) 
-              : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800'],
-            features: p.product_features ? p.product_features.map(f => ({ name: f.feature_name, value: f.feature_value })) : [],
-            createdAt: p.created_at
-          }));
+              : [];
+
+            return {
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              shortDescription: p.short_description,
+              fullDescription: p.full_description,
+              price: Number(p.price),
+              oldPrice: p.old_price ? Number(p.old_price) : null,
+              cost: p.cost ? Number(p.cost) : 0,
+              stock: p.stock,
+              minStock: p.min_stock || 5,
+              sku: p.sku,
+              categoryId: p.category_id,
+              categoryName: p.categories ? p.categories.name : 'General',
+              brandId: p.brand_id,
+              brandName: p.brands ? p.brands.name : 'ZyLogix',
+              status: p.status,
+              isFeatured: p.is_featured,
+              isOffer: p.is_offer,
+              discountPercentage: p.discount_percentage || 0,
+              images: productImages,
+              features: p.product_features ? p.product_features.map(f => ({ name: f.feature_name, value: f.feature_value })) : [],
+              createdAt: p.created_at
+            };
         }
       } catch (err) {
         console.warn("Supabase fetch failed, falling back to LocalStorage:", err);
@@ -205,10 +207,10 @@ class ZyLogixDBService {
 
     if (this.useSupabase) {
       try {
-        const { error } = await this.supabase.from("products").upsert({
+        const payload = {
           id: productData.id || undefined,
           name: productData.name,
-          slug: productData.slug || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          slug: productData.slug || productData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'),
           short_description: productData.shortDescription,
           full_description: productData.fullDescription,
           price: productData.price,
@@ -217,13 +219,39 @@ class ZyLogixDBService {
           stock: productData.stock,
           min_stock: productData.minStock,
           sku: productData.sku,
+          category_id: productData.categoryId || null,
           status: productData.status || 'active',
           is_featured: productData.isFeatured || false,
           is_offer: productData.isOffer || false,
           discount_percentage: productData.discountPercentage || 0
-        });
+        };
+
+        const { data: upsertData, error } = await this.supabase
+          .from("products")
+          .upsert(payload)
+          .select();
 
         if (error) console.error("Supabase upsert product error:", error.message);
+
+        const savedId = (upsertData && upsertData[0] && upsertData[0].id) ? upsertData[0].id : productData.id;
+
+        if (savedId && productData.images && Array.isArray(productData.images)) {
+          // Sync images to product_images table in Supabase
+          await this.supabase.from("product_images").delete().eq("product_id", savedId);
+
+          const imageRows = productData.images
+            .filter(url => typeof url === 'string' && url.trim() !== '')
+            .map((url, idx) => ({
+              product_id: savedId,
+              url: url.trim(),
+              is_primary: idx === 0
+            }));
+
+          if (imageRows.length > 0) {
+            const { error: imgErr } = await this.supabase.from("product_images").insert(imageRows);
+            if (imgErr) console.error("Supabase product_images insert error:", imgErr.message);
+          }
+        }
       } catch (err) {
         console.error("Supabase upsert exception:", err);
       }

@@ -308,7 +308,9 @@ class ZyLogixAdmin {
     e.preventDefault();
     const id = document.getElementById("productIdInput").value;
     const imagesRaw = document.getElementById("prodImageInput").value.trim();
-    const imagesList = imagesRaw ? imagesRaw.split("\n").map(s => s.trim()) : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800'];
+    const imagesList = imagesRaw 
+      ? imagesRaw.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== "")
+      : [];
     const selectedCatId = document.getElementById("prodCategoryInput").value;
     const catObj = this.categories.find(c => c.id === selectedCatId);
 
